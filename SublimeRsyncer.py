@@ -15,22 +15,23 @@ class SublimeRsyncer(sublime_plugin.EventListener):
                 if current_file[:len(folder['localPath'])] == folder['localPath']:
 
                     # spawn a thread so non-blocking
-                    thread = Rsync(folder['localPath'], folder['remote'], folder['exclude'], folder['deleteAfter'])
+                    thread = Rsync(folder['localPath'], folder['remote'], folder['exclude'], folder['deleteAfter'], folder['port'])
                     thread.start()
 
 
 class Rsync(threading.Thread):
-    def __init__(self, localPath, remote, exclude, deleteAfter):
+    def __init__(self, localPath, remote, exclude, deleteAfter, port):
         self.localPath = localPath
         self.remote = remote
         self.exclude = exclude
         self.deleteAfter = deleteAfter
+        self.port = port
         self.result = None
         threading.Thread.__init__(self)
 
     def run(self):
 
-        commandComponents = ['rsync', '-avz', self.localPath, self.remote]
+        commandComponents = ['rsync', '-avze', 'ssh -p%s' % self.port, self.localPath, self.remote]
 
         if self.deleteAfter:
             commandComponents.insert(2, "--delete-after")
